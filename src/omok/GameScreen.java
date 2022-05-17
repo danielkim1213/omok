@@ -160,6 +160,10 @@ public class GameScreen extends javax.swing.JFrame {
             {
                 spaceColor[y][x] = 'b';
                 lblSpace[y][x].setIcon(black);
+                if(checkOmok(y, x))
+                {
+                    lblWin.setText("You Win!");
+                }
                 turn = 'w';
                 AI_Movement();
             }
@@ -197,12 +201,12 @@ public class GameScreen extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_btnQuitActionPerformed
 
-    private boolean checkOmok(int row, int col, char color)
+    private boolean checkOmok(int row, int col)
     {
-        int countX = count(row, col, color, new int[]{0, -1}, 0) + count(row, col, color, new int[]{0, 1}, 0);
-        int countY = count(row, col, color, new int[]{-1, 0}, 0) + count(row, col, color, new int[]{1, 0}, 0);
-        int countNegative = count(row, col, color, new int[]{-1, -1}, 0) + count(row, col, color, new int[]{1, 1}, 0);
-        int countPositive = count(row, col, color, new int[]{1, -1}, 0) + count(row, col, color, new int[]{-1, 1}, 0);
+        int countX = count(row, col, turn, new int[]{0, -1}, 0) + count(row, col, turn, new int[]{0, 1}, 0);
+        int countY = count(row, col, turn, new int[]{-1, 0}, 0) + count(row, col, turn, new int[]{1, 0}, 0);
+        int countNegative = count(row, col, turn, new int[]{-1, -1}, 0) + count(row, col, turn, new int[]{1, 1}, 0);
+        int countPositive = count(row, col, turn, new int[]{1, -1}, 0) + count(row, col, turn, new int[]{-1, 1}, 0);
         
         if(countX == 4 || countY == 4 || countNegative == 4 || countPositive == 4)
         {

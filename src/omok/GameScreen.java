@@ -26,6 +26,7 @@ public class GameScreen extends javax.swing.JFrame {
     private String[][] spaceColor = new String[19][19];
     private String turn = "b";
     boolean gameOver = false;
+    int count = 0;
     
     /**
      * Creates new form GameScreen
@@ -100,6 +101,8 @@ public class GameScreen extends javax.swing.JFrame {
         lblLocation = new javax.swing.JLabel();
         lblWin = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
+        lblBestMove = new javax.swing.JLabel();
+        lblCounter = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(1280, 720));
@@ -133,6 +136,12 @@ public class GameScreen extends javax.swing.JFrame {
         });
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 700, 700));
+
+        lblBestMove.setText("Best Move: ");
+        getContentPane().add(lblBestMove, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 490, -1, -1));
+
+        lblCounter.setText("jLabel1");
+        getContentPane().add(lblCounter, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 520, -1, -1));
 
         pack();
         setLocationRelativeTo(null);
@@ -211,10 +220,12 @@ public class GameScreen extends javax.swing.JFrame {
 
     private void makeMove()
     {
+        
         if(turn == "b")
         {
             return;
         }
+        
         
         int[] bestMove = new int[]{-1, -1};
         int bestScore = Integer.MIN_VALUE;
@@ -234,21 +245,34 @@ public class GameScreen extends javax.swing.JFrame {
             {
                 if(board[i][j] == "")
                 {
-                    
+                    board[i][j] = "w";
+                    int score = minimax(board, 0, false);
+                    if(score > bestScore)
+                    {
+                        bestMove[0] = i;
+                        bestMove[1] = j;
+                        bestScore = score;
+                    }
+                    board[i][j] = "";
                 }
+                
             }
+            
         }
-        
+        lblCounter.setText("Count: " + count + ", " + bestScore);
+        count = 0;
+        lblBestMove.setText("Best Move: " + bestMove[0] + "," + bestMove[1]);
         
     }
     
     private int minimax(String[][] board, int depth, boolean myTurn)
     {
-        
+        count++;
+        String winner = checkWinner(board);
         return 0;
     }
     
-    private String checkWinner(String color, String[][] board)
+    private String checkWinner(String[][] board)
     {
         int rockCount = 0;
         for(int i = 0; i < 19; i++)
@@ -329,6 +353,8 @@ public class GameScreen extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnMainMenu;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JLabel lblBestMove;
+    private javax.swing.JLabel lblCounter;
     private javax.swing.JLabel lblLocation;
     private javax.swing.JLabel lblWin;
     // End of variables declaration//GEN-END:variables

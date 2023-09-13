@@ -23,8 +23,8 @@ public class GameScreen extends javax.swing.JFrame {
     private JLabel[][] lblSpace;
     private ImageIcon black, white, preBlack, preWhite;
     private int[] coord = new int[2];
-    private char[][] spaceColor = new char[19][19];
-    private char turn = 'b';
+    private String[][] spaceColor = new String[19][19];
+    private String turn = "b";
     boolean gameOver = false;
     
     /**
@@ -35,6 +35,13 @@ public class GameScreen extends javax.swing.JFrame {
         this.ss = ss;
         makeSpaces();
         stoneImages();
+        for(int i=0; i< 19; i++)
+        {
+            for(int j = 0; j< 19; j++)
+            {
+                spaceColor[i][j] = "";
+            }
+        }
     }
     
     private void makeSpaces()
@@ -89,29 +96,15 @@ public class GameScreen extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
         btnMainMenu = new javax.swing.JButton();
         lblLocation = new javax.swing.JLabel();
         lblWin = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(1280, 720));
         setUndecorated(true);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        jPanel1.setCursor(new java.awt.Cursor(java.awt.Cursor.CROSSHAIR_CURSOR));
-        jPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                jPanel1MouseMoved(evt);
-            }
-        });
-        jPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jPanel1MouseClicked(evt);
-            }
-        });
-        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 700, 700));
 
         btnMainMenu.setText("Main Menu");
         btnMainMenu.addActionListener(new java.awt.event.ActionListener() {
@@ -127,6 +120,20 @@ public class GameScreen extends javax.swing.JFrame {
         lblWin.setText("jLabel1");
         getContentPane().add(lblWin, new org.netbeans.lib.awtextra.AbsoluteConstraints(770, 180, -1, -1));
 
+        jPanel1.setCursor(new java.awt.Cursor(java.awt.Cursor.CROSSHAIR_CURSOR));
+        jPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                jPanel1MouseMoved(evt);
+            }
+        });
+        jPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jPanel1MouseClicked(evt);
+            }
+        });
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 700, 700));
+
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
@@ -137,33 +144,38 @@ public class GameScreen extends javax.swing.JFrame {
     }//GEN-LAST:event_btnMainMenuActionPerformed
 
     private void jPanel1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanel1MouseClicked
-        int x = (int)((evt.getX()-4)/36.37);
-        int y = (int)((evt.getY()-4)/36.37);
-        
-        x = rounding(x);
-        y = rounding(y);
-        
-        boolean isOmok = false;
-        
-        if(spaceColor[y][x] == 0)
+        if(!gameOver)
         {
-            spaceColor[y][x] = turn;
-            if(turn == 'b')
+            int x = (int)((evt.getX()-4)/36.37);
+            int y = (int)((evt.getY()-4)/36.37);
+
+            x = rounding(x);
+            y = rounding(y);
+
+            boolean isOmok = false;
+
+            if(spaceColor[y][x] == "")
             {
-                lblSpace[y][x].setIcon(black);
-                turn = 'w';
-                if(checkOmok(y, x, 'b'))
+                spaceColor[y][x] = turn;
+                if(turn == "b")
                 {
-                    JOptionPane.showMessageDialog(null, "Black Wins!");
+                    lblSpace[y][x].setIcon(black);
+                    turn = "w";
+                    if(checkOmok(y, x, "b", spaceColor))
+                    {
+                        JOptionPane.showMessageDialog(null, "Black Wins!");
+                        gameOver = true;
+                    }
                 }
-            }
-            else
-            {
-                lblSpace[y][x].setIcon(white);
-                turn = 'b';
-                if(checkOmok(y, x, 'w'))
+                else
                 {
-                    JOptionPane.showMessageDialog(null, "White Wins!");
+                    lblSpace[y][x].setIcon(white);
+                    turn = "b";
+                    if(checkOmok(y, x, "w", spaceColor))
+                    {
+                        JOptionPane.showMessageDialog(null, "White Wins!");
+                        gameOver = true;
+                    }
                 }
             }
         }
@@ -178,13 +190,13 @@ public class GameScreen extends javax.swing.JFrame {
         
         lblLocation.setText(x + ", " + y);
         
-        if(spaceColor[coord[1]][coord[0]] == 0)
+        if(spaceColor[coord[1]][coord[0]] == "")
         {
             lblSpace[coord[1]][coord[0]].setIcon(null);
         }
-        if(spaceColor[y][x] == 0)
+        if(spaceColor[y][x] == "")
         {
-            if(turn == 'b')
+            if(turn == "b")
             {
                 lblSpace[y][x].setIcon(preBlack);
             }
@@ -197,12 +209,82 @@ public class GameScreen extends javax.swing.JFrame {
         coord[1] = y;
     }//GEN-LAST:event_jPanel1MouseMoved
 
-    private boolean checkOmok(int row, int col, char color)
+    private void makeMove()
     {
-        int countX = count(row, col, color, new int[]{0, -1}, 0) + count(row, col, color, new int[]{0, 1}, 0);
-        int countY = count(row, col, color, new int[]{-1, 0}, 0) + count(row, col, color, new int[]{1, 0}, 0);
-        int countNegative = count(row, col, color, new int[]{-1, -1}, 0) + count(row, col, color, new int[]{1, 1}, 0);
-        int countPositive = count(row, col, color, new int[]{1, -1}, 0) + count(row, col, color, new int[]{-1, 1}, 0);
+        if(turn == "b")
+        {
+            return;
+        }
+        
+        int[] bestMove = new int[]{-1, -1};
+        int bestScore = Integer.MIN_VALUE;
+        
+        String[][] board = new String[19][19];
+        for(int i = 0; i < 19; i++)
+        {
+            for(int j=0; j < 19; j++)
+            {
+                board[i][j] = spaceColor[i][j];
+            }
+        }
+        
+        for(int i = 0; i < 19; i++)
+        {
+            for(int j=0; j < 19; j++)
+            {
+                if(board[i][j] == "")
+                {
+                    
+                }
+            }
+        }
+        
+        
+    }
+    
+    private int minimax(String[][] board, int depth, boolean myTurn)
+    {
+        
+        return 0;
+    }
+    
+    private String checkWinner(String color, String[][] board)
+    {
+        int rockCount = 0;
+        for(int i = 0; i < 19; i++)
+        {
+            for(int j = 0; j < 19; j++)
+            {
+                if(board[i][j] == "")
+                {
+                    rockCount++;
+                    continue;
+                }
+                else
+                {
+                    if(checkOmok(i, j, "b", board))
+                    {
+                        return "b";
+                    }
+                    else if(checkOmok(i, j, "w", board))
+                    {
+                        return "w";
+                    }
+                }
+            }
+        }
+        if(rockCount == 19*19)
+        {
+            return "t";
+        }
+        return "?";
+    }
+    private boolean checkOmok(int row, int col, String color, String[][] board)
+    {
+        int countX = count(row, col, color, new int[]{0, -1}, 0, board) + count(row, col, color, new int[]{0, 1}, 0, board);
+        int countY = count(row, col, color, new int[]{-1, 0}, 0, board) + count(row, col, color, new int[]{1, 0}, 0, board);
+        int countNegative = count(row, col, color, new int[]{-1, -1}, 0, board) + count(row, col, color, new int[]{1, 1}, 0, board);
+        int countPositive = count(row, col, color, new int[]{1, -1}, 0, board) + count(row, col, color, new int[]{-1, 1}, 0, board);
         
         if(countX == 4 || countY == 4 || countNegative == 4 || countPositive == 4)
         {
@@ -214,7 +296,7 @@ public class GameScreen extends javax.swing.JFrame {
         }
     }
     
-    private int count(int row, int col, char color, int[] direction, int depth)
+    private int count(int row, int col, String color, int[] direction, int depth, String[][] board)
     {
         row += direction[0];
         col += direction[1];
@@ -224,13 +306,13 @@ public class GameScreen extends javax.swing.JFrame {
             return depth;
         }
         
-        if(spaceColor[row][col] != color)
+        if(board[row][col] != color)
         {
             return depth;
         }
         else
         {
-            return count(row, col, color, direction, depth+1);
+            return count(row, col, color, direction, depth+1, board);
         }
     }
 
@@ -242,6 +324,7 @@ public class GameScreen extends javax.swing.JFrame {
         }
         return a;
     }
+    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnMainMenu;

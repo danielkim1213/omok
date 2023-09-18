@@ -64,12 +64,11 @@ public class GameScreen extends javax.swing.JFrame {
         
         JLabel lblBackground = new JLabel();
         BufferedImage gomokuBoard;
-        URL urlBoard = getClass().getResource("/omok/Images/GomokuBoard.png");
         try {
-            gomokuBoard = ImageIO.read(urlBoard);
+            gomokuBoard = ImageIO.read(GameScreen.class.getResource("Images/GomokuBoard.png"));
             lblBackground.setIcon(new ImageIcon(gomokuBoard.getScaledInstance(700, 700, Image.SCALE_SMOOTH)));
         } catch (IOException ex) {
-            Logger.getLogger(GameScreen.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.print("Image Exception");
         }
         
         lblBackground.setOpaque(true);
@@ -114,6 +113,7 @@ public class GameScreen extends javax.swing.JFrame {
         lblLocation = new javax.swing.JLabel();
         lblWin = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
         lblBestMove = new javax.swing.JLabel();
         lblCounter = new javax.swing.JLabel();
         btnRestart = new javax.swing.JButton();
@@ -149,6 +149,10 @@ public class GameScreen extends javax.swing.JFrame {
             }
         });
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel1.setText("0            1            2            3            4            5            6            7            8            9           10           11           12          13          14");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, 720, -1));
+
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 700, 700));
 
         lblBestMove.setText("Best Move: ");
@@ -194,7 +198,7 @@ public class GameScreen extends javax.swing.JFrame {
                 {
                     lblSpace[y][x].setIcon(black);
                     turn = "w";
-                    if(checkOmok(y, x, "b", spaceColor) == 5)
+                    if(checkOmok(y, x, "b", spaceColor) == Integer.MAX_VALUE)
                     {
                         JOptionPane.showMessageDialog(null, "Black Wins!");
                         gameOver = true;
@@ -205,7 +209,7 @@ public class GameScreen extends javax.swing.JFrame {
                 {
                     lblSpace[y][x].setIcon(white);
                     turn = "b";
-                    if(checkOmok(y, x, "w", spaceColor) == 5)
+                    if(checkOmok(y, x, "w", spaceColor) == Integer.MAX_VALUE)
                     {
                         JOptionPane.showMessageDialog(null, "White Wins!");
                         gameOver = true;
@@ -224,7 +228,7 @@ public class GameScreen extends javax.swing.JFrame {
         x = rounding(x);
         y = rounding(y);
         
-        lblLocation.setText(x + ", " + y);
+        lblLocation.setText(y + ", " + x);
         
         if(spaceColor[coord[1]][coord[0]] == "")
         {
@@ -271,16 +275,21 @@ public class GameScreen extends javax.swing.JFrame {
             }
         }
         
+        
+        
         for(int i = 0; i < 15; i++)
         {
             for(int j=0; j < 15; j++)
             {
                 if(board[i][j] == "")
                 {
-                    
-                    board[i][j] = "w";
+                    if(!checkNearby(i, j, board, 1))
+                    {
+                        continue;
+                    }
+                    board[i][j] = "w"; //assume computer puts white rock at [i][j]
                     int score = minimax(i, j, board, 0, Integer.MIN_VALUE, Integer.MAX_VALUE, false);
-                    if(score > bestScore)
+                    if(score >= bestScore)
                     {
                         bestMove[0] = i;
                         bestMove[1] = j;
@@ -299,26 +308,36 @@ public class GameScreen extends javax.swing.JFrame {
     }
     
     
-    
-    private int minimax(int r, int c, String[][] board, int depth, int alpha, int beta, boolean myTurn) {
+    private int minimax(int r, int c, String[][] board, int depth, int alpha, int beta, boolean AITurn) {
         
         counting++;
 
-        if(depth == 2)
+        if(depth == 5)
         {
             return 0;
         }
        
 
-        if (myTurn) {
-            if(checkOmok(r, c, "b", board) == 5)
-            {
-                return -1000;
+        if (AITurn) {
+            int k = checkOmok(r, c, "b", board);
+            switch (k) {
+                case Integer.MAX_VALUE:
+                    return -10000;
+                case 5:
+                    return -1000;
+                case 4: 
+                    return -100;
+                default:
+                    break;
             }
             int bestScore = Integer.MIN_VALUE;
             for (int row = 0; row < 15; row++) {
                 for (int col = 0; col < 15; col++) {
                     if (board[row][col].equals("")) {
+                        if(!checkNearby(row, col, board, 1))
+                        {
+                            continue;
+                        }
                         board[row][col] = "w";
                         int score = minimax(row, col, board, depth + 1, alpha, beta, false);
                         board[row][col] = "";
@@ -332,14 +351,21 @@ public class GameScreen extends javax.swing.JFrame {
             }
             return bestScore;
         } else {
-            if(checkOmok(r,c,"w",board) == 5)
-            {
-                return 1000;
+            int k = checkOmok(r, c, "w", board);
+            switch (k) {
+                case Integer.MAX_VALUE:
+                    return 10000;
+                default:
+                    break;
             }
             int bestScore = Integer.MAX_VALUE;
             for (int row = 0; row < 15; row++) {
                 for (int col = 0; col < 15; col++) {
                     if (board[row][col].equals("")) {
+                        if(!checkNearby(row, col, board,1))
+                        {
+                            continue;
+                        }
                         board[row][col] = "b";
                         int score = minimax(row, col, board, depth + 1, alpha, beta, true);
                         board[row][col] = "";
@@ -359,27 +385,64 @@ public class GameScreen extends javax.swing.JFrame {
     //the return value of this will determine minimax
     private int checkOmok(int row, int col, String color, String[][] board)
     {
-        int countX = count(row, col, color, new int[]{0, -1}, 0, board) + count(row, col, color, new int[]{0, 1}, 0, board);
-        int countY = count(row, col, color, new int[]{-1, 0}, 0, board) + count(row, col, color, new int[]{1, 0}, 0, board);
-        int countNegative = count(row, col, color, new int[]{-1, -1}, 0, board) + count(row, col, color, new int[]{1, 1}, 0, board);
-        int countPositive = count(row, col, color, new int[]{1, -1}, 0, board) + count(row, col, color, new int[]{-1, 1}, 0, board);
+        int X = count(row, col, color, new int[]{0, -1}, 0, board)[0] + count(row, col, color, new int[]{0, 1}, 0, board)[0];
+        int Y = count(row, col, color, new int[]{-1, 0}, 0, board)[0] + count(row, col, color, new int[]{1, 0}, 0, board)[0];
+        int negative = count(row, col, color, new int[]{-1, -1}, 0, board)[0] + count(row, col, color, new int[]{1, 1}, 0, board)[0];
+        int positive = count(row, col, color, new int[]{1, -1}, 0, board)[0] + count(row, col, color, new int[]{-1, 1}, 0, board)[0];
         
-        return Math.max(countX, Math.max(countY, Math.max(countNegative, countPositive))) + 1;
+        if(Math.max(X, Math.max(Y, Math.max(negative, positive))) == 4)
+        {
+            return Integer.MAX_VALUE;
+        }
+        
+        int countX = X + count(row, col, color, new int[]{0, -1}, 0, board)[1] + count(row, col, color, new int[]{0, 1}, 0, board)[1];
+        int countY = Y + count(row, col, color, new int[]{-1, 0}, 0, board)[1] + count(row, col, color, new int[]{1, 0}, 0, board)[1];
+        int countNegative = negative + count(row, col, color, new int[]{-1, -1}, 0, board)[1] + count(row, col, color, new int[]{1, 1}, 0, board)[1];
+        int countPositive = positive + count(row, col, color, new int[]{1, -1}, 0, board)[1] + count(row, col, color, new int[]{-1, 1}, 0, board)[1];
+        
+        return Math.max(countX, Math.max(countY, Math.max(countNegative, countPositive)));
     }
     
-    private int count(int row, int col, String color, int[] direction, int depth, String[][] board)
+    private boolean checkNearby(int row, int col, String[][] board, int x)
+    {
+        for(int i = -x; i<= x; i++)
+        {
+            for(int j = -x; j<= x; j++)
+            {
+                if(i == 0 && j == 0)
+                {
+                    continue;
+                }
+                if(board[rounding(row + i)][rounding(col + j)] != "")
+                {
+                    return true;
+                }
+                
+            }
+        }
+        return false;
+    }
+    
+    private int[] count(int row, int col, String color, int[] direction, int depth, String[][] board)
     {
         row += direction[0];
         col += direction[1];
         
         if(row < 0 || row > 14 || col< 0 || col > 14)
         {
-            return depth;
+            int x[] = {depth, 0};
+            return x;
         }
         
-        if(board[row][col] != color)
+        if(board[row][col] == "")
         {
-            return depth;
+            int x[] = {depth, 1};
+            return x;
+        }
+        else if(board[row][col] != color)
+        {
+            int x[] = {depth, 0};
+            return x;
         }
         else
         {
@@ -393,6 +456,9 @@ public class GameScreen extends javax.swing.JFrame {
         {
             a = 14;
         }
+        else if(a<0){
+            a = 0;
+        }
         return a;
     }
     
@@ -400,6 +466,7 @@ public class GameScreen extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnMainMenu;
     private javax.swing.JButton btnRestart;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel lblBestMove;
     private javax.swing.JLabel lblCounter;
